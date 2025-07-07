@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { likePost, addComment, repostPost, getComments } from '@/services/post.service';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import FollowButton from './FollowButton';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Icon } from '@iconify/react';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Post {
   _id: string;
@@ -20,7 +21,6 @@ export interface Post {
   imageUrl?: string;
   createdAt: string;
   likes: string[];
-  currentUserId: string;
   repost?: Post;
   repostCount?: number;
   likesCount?: number;
@@ -44,19 +44,31 @@ interface PostCardProps {
 
 const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
   const queryClient = useQueryClient();
+  const {user} = useAuth()
   const [comment, setComment] = useState('');
   const [optimisticLikes, setOptimisticLikes] = useState(post.likes.length);
-  const [hasLiked, setHasLiked] = useState(post.likes.includes(post.currentUserId));
+  const [hasLiked, setHasLiked] = useState(post.likes.includes(user?._id as string));
+  const [repostDialogOpen, setRepostDialogOpen] = useState(false);
+  const [quote, setQuote] = useState('');
+  const [expandedReplies, setExpandedReplies] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    setHasLiked(post.likes.includes(user?._id as string));
+  }, [post.likes,user]);
 
   const likeMutation = useMutation({
     mutationFn: () => likePost(post._id),
     onMutate: async () => {
-      setHasLiked((prev: boolean) => !prev);
-      setOptimisticLikes((prev: number) => (hasLiked ? prev - 1 : prev + 1));
+      setHasLiked(prev => {
+        setOptimisticLikes(count => prev ? count - 1 : count + 1);
+        return !prev;
+      });
     },
     onError: (error: unknown) => {
-      setHasLiked((prev: boolean) => !prev);
-      setOptimisticLikes((prev: number) => (hasLiked ? prev + 1 : prev - 1));
+      setHasLiked(prev => {
+        setOptimisticLikes(count => prev ? count - 1 : count + 1);
+        return !prev;
+      });
       toast.error(error instanceof Error ? error.message : 'Failed to like post');
     },
     onSuccess: (data) => {
@@ -70,6 +82,7 @@ const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
     queryKey: ['comments', post._id],
     queryFn: () => getComments(post._id),
   });
+  console.log(hasLiked)
 
   const commentMutation = useMutation({
     mutationFn: () => addComment(post._id, comment),
@@ -111,11 +124,6 @@ const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
     },
   });
 
-  const [repostDialogOpen, setRepostDialogOpen] = useState(false);
-  const [quote, setQuote] = useState('');
-
-  // State for expanded replies by comment ID
-  const [expandedReplies, setExpandedReplies] = useState<{ [key: string]: boolean }>({});
 
   // Helper to toggle replies
   const toggleReplies = (id: string) => {

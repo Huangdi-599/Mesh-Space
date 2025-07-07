@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { getUserById, getFollowers, getFollowing } from '@/services/user.service';
 import { getPostsByUser } from '@/services/post.service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
 import FollowButton from '@/components/FollowButton';
 import UserListModal from '@/components/UserListModal';
 import PostCard from '@/components/PostCard';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 const ProfileDisplay = () => {
   const { id: userId } = useParams();
   const { user } = useAuth();
@@ -60,7 +60,7 @@ const ProfileDisplay = () => {
             {!isOwnProfile && (
               <FollowButton
                 userId={viewedUser._id}
-                isFollowing={followersQuery.data?.some((f: any) => f._id === user?.id) ?? false}
+                isFollowing={followersQuery.data?.some((f: any) => f._id === user?._id) ?? false}
               />
             )}
           </div>

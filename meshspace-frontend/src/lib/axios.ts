@@ -1,9 +1,9 @@
 // src/lib/axios.ts
 import axios from 'axios';
-
+const BackendURL = import.meta.env.VITE_BACKEND_URL;
+const baseURL = `${BackendURL}/api`
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5100/api',
-  withCredentials: true,
+  baseURL:baseURL,
 });
 
 axiosInstance.interceptors.request.use(

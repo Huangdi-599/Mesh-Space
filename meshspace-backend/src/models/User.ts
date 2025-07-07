@@ -6,7 +6,6 @@ export interface IUser extends Document {
   password: string;
   isVerified: boolean;
   avatar?: string;
-  refreshToken?: string;
   followers: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
   createdAt: Date;
@@ -22,7 +21,6 @@ const UserSchema = new Schema<IUser>(
     avatar: { type: String },
     followers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    refreshToken: { type: String },
   },
   { timestamps: true }
 );

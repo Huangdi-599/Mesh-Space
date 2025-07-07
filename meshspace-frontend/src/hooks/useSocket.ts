@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 let socket: ReturnType<typeof io> | null = null;
 
-export const useSocket = (onNotification: (data: any) => void) => {
+export const useSocket = (onNotification: (data: unknown) => void) => {
   const { user } = useAuth();
 
   useEffect(() => {

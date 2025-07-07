@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostById } from '@/services/post.service';
 import PostCard from '@/components/PostCard';
 
 const PostDetail = () => {
+  const navigate = useNavigate();
   const { postId } = useParams();
   const { data: post, isLoading, isError } = useQuery({
     queryKey: ['post', postId],
@@ -16,6 +17,13 @@ const PostDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center py-10">
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 flex items-center gap-2 text-primary hover:underline hover:text-blue-600 transition-colors text-sm font-medium self-start"
+        aria-label="Go back"
+      >
+        <span className="text-xl">←</span> Back
+      </button>
       <div className="w-full max-w-xl">
         <PostCard post={post} />
       </div>

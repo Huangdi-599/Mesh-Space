@@ -9,6 +9,21 @@ import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { useInView } from 'react-intersection-observer';
 import PostCard from '@/components/PostCard';
 import type { Post } from '@/components/PostCard';
+import { toast } from 'sonner';
+
+// Sleek Custom Loader component
+const Loader = () => (
+  <div className="flex flex-col items-center justify-center min-h-[40vh] w-full">
+    <div className="relative mb-4">
+      <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-primary to-blue-400 animate-spin-slow shadow-lg" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full bg-background border-2 border-primary/30" />
+      </div>
+    </div>
+    <span className="text-primary text-lg font-semibold tracking-wide drop-shadow-sm">Fetching awesome posts for you...</span>
+    <span className="text-muted-foreground text-sm mt-1">Hang tight, this won't take long!</span>
+  </div>
+);
 
 const Dashboard = () => {
   const { register, handleSubmit, reset } = useForm<{ content: string }>();
@@ -31,6 +46,7 @@ const Dashboard = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isLoading,
   } = useInfiniteQuery({
     queryKey: ['feed', feedType],
     queryFn: ({ pageParam = 1 }) => fetchFeed(pageParam, feedType),
@@ -47,6 +63,8 @@ const Dashboard = () => {
   };
 
   if (inView && hasNextPage) fetchNextPage();
+
+  if (isLoading && !data) return <Loader />;
 
   return (
     <div className="w-full space-y-6">
@@ -71,7 +89,28 @@ const Dashboard = () => {
         <DialogContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Textarea {...register('content')} placeholder="What's on your mind?" />
-            <Input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                if (file) {
+                  if (!file.type.startsWith('image/')) {
+                    toast.error('Only image files are allowed!');
+                    e.target.value = '';
+                    setImage(null);
+                    return;
+                  }
+                  if (file.size > 2 * 1024 * 1024) {
+                    toast.error('Image size must be less than 2MB!');
+                    e.target.value = '';
+                    setImage(null);
+                    return;
+                  }
+                }
+                setImage(file);
+              }}
+            />
             <Button type="submit" disabled={postMutation.isPending}>
               {postMutation.isPending ? 'Posting...' : 'Post'}
             </Button>

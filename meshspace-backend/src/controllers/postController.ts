@@ -24,6 +24,7 @@ export const createPost: RequestHandler = async (req, res) => {
     });
     res.status(201).json({ status: 'success', message: 'Post created', data: post });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });
   }
 };
@@ -38,10 +39,8 @@ export const fetchFeed: RequestHandler = async (req, res) => {
 
     let posts;
     if (type === 'trending') {
-      // Trending: posts with most likes+reposts in last 24h
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      // Trending: posts with most likes+reposts (no time window)
       posts = await Post.aggregate([
-        { $match: { createdAt: { $gte: since } } },
         {
           $addFields: {
             likesCount: { $size: { $ifNull: ['$likes', []] } },
@@ -66,6 +65,11 @@ export const fetchFeed: RequestHandler = async (req, res) => {
         { $skip: skip },
         { $limit: limit },
       ]);
+      // Remove reposts array from each post
+      posts = posts.map((post: any) => {
+        if (post.reposts) delete post.reposts;
+        return post;
+      });
       // Populate author and repost fields manually after aggregation
       posts = await Post.populate(posts, [
         { path: 'author', select: 'username avatar following' },
@@ -86,9 +90,9 @@ export const fetchFeed: RequestHandler = async (req, res) => {
       const followingIds = user ? user.following.map(id => id.toString()) : [];
       followingIds.push(userId); // include self
       posts = await Post.find({ author: { $in: followingIds } })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .populate('author', 'username avatar following')
         .populate({ path: 'repost', select: 'author content imageUrl createdAt', populate: { path: 'author', select: 'username avatar' } })
         .lean();
@@ -106,6 +110,7 @@ export const fetchFeed: RequestHandler = async (req, res) => {
         (post as any).commentCount = await Comments.countDocuments({ post: post._id });
       }
     }
+
     res.json({ status: 'success', message: 'Feed fetched', data: posts });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });

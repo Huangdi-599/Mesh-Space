@@ -18,7 +18,7 @@ export const getMe: RequestHandler = async (req, res) => {
 
 export const updateProfile: RequestHandler = async (req, res) => {
   try {
-    const { username, email, avatar } = req.body;
+    const { username, email } = req.body;
     const user = await User.findById(req.user?.userId);
     if (!user) {
       res.status(404).json({ status: 'error', message: 'User not found' });
@@ -26,7 +26,12 @@ export const updateProfile: RequestHandler = async (req, res) => {
     }
     if (username) user.username = username;
     if (email) user.email = email.toLowerCase();
-    if (avatar !== undefined) user.avatar = avatar;
+    // Use Cloudinary URL if file uploaded, else fallback to body
+    if (req.file) {
+      user.avatar = (req.file as any).path;
+    } else if (req.body.avatar !== undefined) {
+      user.avatar = req.body.avatar;
+    }
     await user.save();
     res.json({ status: 'success', message: 'Profile updated', data: user });
   } catch (err) {

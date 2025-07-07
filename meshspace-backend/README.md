@@ -3,13 +3,14 @@
 A modern Node.js/Express/Mongoose backend for the MeshSpace social media app.
 
 ## Features
-- JWT authentication (register, login, profile, email verification)
-- User profiles with avatar upload
-- Posts with images, reposts (with/without quote), trending/following feeds
+- JWT authentication (register, login, profile, email verification, resend verification, forgot/reset password)
+- User profiles with avatar upload (Cloudinary, 2MB/image-only limit)
+- Posts with images (Cloudinary, 2MB/image-only limit), reposts (with/without quote), trending/following feeds
 - Threaded/nested comments with replies and mentions
 - Real-time notifications (like, comment, reply, follow, repost, mention) via Socket.io
 - RESTful API with type-safe controllers
-- Cloudinary integration for image uploads
+- Cloudinary integration for all media uploads (avatars, post images)
+- Email service for verification, password reset, and notifications (robust error handling/logging)
 
 ## Getting Started
 
@@ -34,9 +35,11 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 EMAIL_HOST=your_smtp_host
+EMAIL_PORT=your_smtp_port
 EMAIL_USER=your_email_user
 EMAIL_PASS=your_email_pass
 ```
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS` must be set to a real SMTP provider (e.g., Gmail, Mailgun, SendGrid, Mailtrap, etc.).
 
 ### Running the Server
 ```bash
@@ -50,13 +53,46 @@ npm start     # Start in production mode
 - `lint`: Run ESLint
 
 ## API Overview
-- **Auth:** `/api/auth/register`, `/api/auth/login`, `/api/auth/verify-email`, `/api/auth/me`
-- **User:** `/api/users/me`, `/api/users/:id`, `/api/users/:userId/follow`
-- **Posts:** `/api/posts/` (create), `/api/posts/feed`, `/api/posts/:postId`, `/api/posts/:postId/comments`, `/api/posts/:postId/like`, `/api/posts/:postId/repost`, `/api/posts/search?q=...`
-- **Notifications:** `/api/notifications/`
+- **Auth:**
+  - `POST /api/auth/register` (register, avatar upload via Cloudinary)
+  - `POST /api/auth/login`
+  - `POST /api/auth/verify-email` (verify email with token)
+  - `POST /api/auth/forgot-password` (request password reset)
+  - `POST /api/auth/reset-password` (reset password with token)
+  - `POST /api/auth/resend-verification` (resend verification email)
+- **User:**
+  - `GET /api/user/me` (get current user)
+  - `PUT /api/user/me` (update profile, avatar upload via Cloudinary)
+  - `GET /api/user/:id` (get user by ID)
+  - `POST /api/user/:userId/follow` (follow/unfollow)
+  - `GET /api/user/:userId/followers` / `following`
+- **Posts:**
+  - `POST /api/posts/` (create post, image upload via Cloudinary)
+  - `GET /api/posts/feed` (trending/following)
+  - `GET /api/posts/:postId` (post detail)
+  - `POST /api/posts/:postId/comments` (add comment/reply)
+  - `POST /api/posts/:postId/like` (like/unlike)
+  - `POST /api/posts/:postId/repost` (repost)
+  - `GET /api/posts/search?q=...` (search posts)
+- **Notifications:**
+  - `GET /api/notifications/` (fetch notifications)
 
 ## Real-Time
 - Socket.io is used for real-time notifications. The client connects with the user's ID as a query param.
+
+## File Uploads
+- All media (avatars, post images) are uploaded to Cloudinary.
+- File size limit: 2MB. Only image files (`image/*`) are accepted.
+- Backend enforces these limits and returns errors if exceeded.
+
+## Email Service
+- All verification, password reset, and notification emails are sent via SMTP.
+- Errors in email sending are logged but do not block registration or password reset (users can always request again).
+- See `.env` for required SMTP config.
+
+## CORS & Frontend Integration
+- The backend expects requests from the frontend at `CLIENT_URL` (set in `.env`).
+- CORS is enabled for this origin.
 
 ## Project Structure
 - `src/models/` - Mongoose models (User, Post, Comment, Notification)

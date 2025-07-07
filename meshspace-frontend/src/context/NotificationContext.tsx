@@ -39,6 +39,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, [data]);
 
   useSocket((newNotification: any) => {
+    refetch()
     setNotifications((prev) => [newNotification, ...prev]);
 
     toast.custom((t) => (
@@ -61,7 +62,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             } else {
               window.location.href = `/profile/${newNotification.sender.username}`;
             }
-            toast.dismiss(t.id);
+            toast.dismiss(t);
           }}
         >
           View

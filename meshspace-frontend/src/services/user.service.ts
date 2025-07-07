@@ -27,7 +27,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export const followOrUnfollowUser = async (userId: string) => {
   try {
-    const res = await API.post(`/users/${userId}/follow`);
+    const res = await API.post(`/user/${userId}/follow`);
     return res.data;
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, 'Failed to update follow status'));
@@ -36,7 +36,7 @@ export const followOrUnfollowUser = async (userId: string) => {
 
 export const getFollowers = async (userId: string) => {
   try {
-    const res = await API.get(`/users/${userId}/followers`);
+    const res = await API.get(`/user/${userId}/followers`);
     return res.data.data;
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, 'Failed to fetch followers'));
@@ -45,7 +45,7 @@ export const getFollowers = async (userId: string) => {
 
 export const getFollowing = async (userId: string) => {
   try {
-    const res = await API.get(`/users/${userId}/following`);
+    const res = await API.get(`/user/${userId}/following`);
     return res.data.data;
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, 'Failed to fetch following'));

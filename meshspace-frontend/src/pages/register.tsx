@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 function isApiError(err: unknown): err is { response: { data: { message?: string } } } {
   if (typeof err !== 'object' || err === null) return false;
@@ -18,10 +19,8 @@ function isApiError(err: unknown): err is { response: { data: { message?: string
 }
 
 const Register = () => {
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
   const [avatarPreview, setAvatarPreview] = useState('');
-  const [avatar, setAvatar] = useState('');
+  const [avatar, setAvatar] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [password, setPassword] = useState('');
@@ -32,16 +31,18 @@ const Register = () => {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: () => {
-      setSuccess('✅ Check your email to verify your account');
-      setError('');
+      toast.success('✅ Check your email to verify your account');
+      navigate('/login')
     },
     onError: (err: unknown) => {
       let message = 'Registration failed';
-      if (isApiError(err) && err.response.data.message) {
+      if (isApiError(err) && typeof err.response.data.message === 'string') {
         message = err.response.data.message;
+      } else if (err instanceof Error && err.message) {
+        message = err.message;
       }
-      setError(message);
-      setSuccess('');
+      console.log(err);
+      toast.error(message);
     },
   });
 
@@ -53,13 +54,20 @@ const Register = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setAvatarPreview(base64String);
-        setAvatar(base64String);
-      };
-      reader.readAsDataURL(file);
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Only image files are allowed!');
+        e.target.value = '';
+        return;
+      }
+      // Validate file size (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Image size must be less than 2MB!');
+        e.target.value = '';
+        return;
+      }
+      setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
@@ -75,16 +83,20 @@ const Register = () => {
           <p className="text-sm text-muted-foreground text-center">Join the MeshSpace network</p>
         </CardHeader>
         <CardContent>
-          {success && <p className="text-sm text-green-600 mb-3">{success}</p>}
-          {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               if (password !== confirm) {
-                setError('Passwords do not match');
+                toast.error('Passwords do not match');
                 return;
               }
               const form = e.currentTarget;
+              console.log({
+                avatar,
+                username: form.username.value,
+                email: form.email.value,
+                password
+              });
               mutation.mutate({
                 username: form.username.value,
                 email: form.email.value,

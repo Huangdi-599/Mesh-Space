@@ -3,19 +3,21 @@
 A modern React (Vite + TypeScript + Tailwind + shadcn/ui) frontend for the MeshSpace social media app.
 
 ## Features
-- Authentication (register, login, email verification)
-- User profiles with avatar upload/edit
+- Authentication (register, login, email verification, resend verification, forgot/reset password)
+- User profiles with avatar upload/edit (Cloudinary, 2MB/image-only limit)
 - Trending & following feeds, reposts (with/without quote)
 - Threaded/nested comments with reply/mention support
 - Real-time notifications (like, comment, reply, follow, repost, mention) via Socket.io
 - Search for users and posts (fuzzy, multi-field)
 - Clean, responsive UI with dark mode, skeletons, and beautiful cards
 - Profile and post detail pages
+- All user feedback (success/error) is shown via toast notifications
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js (v18+ recommended)
+- Backend server running and accessible at the specified URL
 
 ### Installation
 ```bash
@@ -60,6 +62,10 @@ npm run preview # Preview production build
 - Built with shadcn/ui, Tailwind CSS, and Lucide icons
 - Modern, responsive, and accessible
 - Dark mode toggle in Navbar and Footer
+- All user feedback (success/error) is shown via toast notifications
+- Forgot/Reset password and resend verification flows are fully supported
+- Profile edit supports avatar update (Cloudinary) and profile info
+- All media uploads (avatars, post images) use Cloudinary and are limited to 2MB/image-only
 
 ## License
 MIT

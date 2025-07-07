@@ -29,11 +29,22 @@ export const registerUser = async (data: {
   username: string;
   email: string;
   password: string;
-  avatar?: string;
+  avatar?: File | null;
 }) => {
   try {
-    const res = await API.post('/auth/register', data);
-    return res.data;
+    const formData = new FormData();
+    formData.append('username', data.username);
+    formData.append('email', data.email);
+    formData.append('password', data.password);
+    if (data.avatar) {
+      formData.append('avatar', data.avatar);
+    }
+    const res = await API.post('/auth/register', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res;
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, 'Failed to register user'));
   }
@@ -54,7 +65,7 @@ export const loginUser = async (data: {
 export const getCurrentUser = async () => {
   try {
     const res = await API.get('/user/me');
-    return res.data.data;
+    return res.data
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, 'Failed to fetch current user'));
   }
@@ -69,9 +80,13 @@ export const logoutUser = async () => {
   }
 };
 
-export const updateUserProfile = async (data: { username?: string; email?: string; avatar?: string }) => {
+export const updateUserProfile = async (data: FormData) => {
   try {
-    const res = await API.put('/user/me', data);
+    const res = await API.put('/user/me', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return res.data.data;
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, 'Failed to update profile'));
@@ -84,5 +99,32 @@ export const verifyEmailToken = async (token: string) => {
     return res.data;
   } catch (error: unknown) {
     throw new Error(getErrorMessage(error, 'Failed to verify email'));
+  }
+};
+
+export const requestPasswordReset = async (email: string) => {
+  try {
+    const res = await API.post('/auth/forgot-password', { email });
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to request password reset'));
+  }
+};
+
+export const resetPassword = async (token: string, password: string) => {
+  try {
+    const res = await API.post('/auth/reset-password', { token, password });
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to reset password'));
+  }
+};
+
+export const resendVerificationEmail = async (email: string) => {
+  try {
+    const res = await API.post('/auth/resend-verification', { email });
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to resend verification email'));
   }
 };

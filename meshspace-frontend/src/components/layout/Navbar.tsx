@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import NotificationDropdown from '../NotificationDropdown';
-import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Icon } from '@iconify/react';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navbar = () => {
   const navRef = useRef<HTMLDivElement>(null);
