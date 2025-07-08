@@ -40,9 +40,10 @@ interface Comment {
 interface PostCardProps {
   post: Post;
   showAllCommentsButton?: boolean;
+  detailPage?: boolean;
 }
 
-const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
+const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: PostCardProps) => {
   const queryClient = useQueryClient();
   const {user} = useAuth()
   const [comment, setComment] = useState('');
@@ -81,6 +82,10 @@ const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
   const { data: comments, refetch: refetchComments } = useQuery({
     queryKey: ['comments', post._id],
     queryFn: () => getComments(post._id),
+    select:(data)=> {
+      console.log(data)
+      return data
+    },
   });
   console.log(hasLiked)
 
@@ -144,7 +149,8 @@ const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
 
   const renderComments = (comments: Comment[], depth = 0, parentId: string | null = null, allTopLevel: Comment[] = comments) => {
     // Only show 1 top-level comment by default
-    const visibleComments = depth === 0 ? comments.slice(0, 1) : comments;
+    const dashComments = depth === 0 ? comments.slice(0, 1) : comments;
+    const visibleComments = detailPage ? comments : dashComments;
     return (
       <ul className={depth === 0 ? 'mt-4 space-y-2' : 'ml-6 pl-4 border-l space-y-2'}>
         {visibleComments.map((c, idx) => (
@@ -300,7 +306,7 @@ const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
                   <img
                     src={post.repost.imageUrl}
                     alt="repost"
-                    className="rounded-xl mt-2 max-w-full h-auto opacity-0 transition-opacity duration-700 fade-in-image"
+                    className="rounded-xl mt-2 max-w-full max-h-[500px] opacity-0 transition-opacity duration-700 fade-in-image"
                     onLoad={e => e.currentTarget.classList.add('fade-in-image')}
                   />
                 )}
@@ -311,13 +317,13 @@ const PostCard = ({ post, showAllCommentsButton = false }: PostCardProps) => {
       </CardHeader>
       <CardContent>
         {!post.repost && (
-          <div onClick={handleContentClick} className="cursor-pointer select-text">
+          <div onClick={handleContentClick} className="cursor-pointer select-text flex flex-col">
             <p>{post.content}</p>
             {post.imageUrl && (
               <img
                 src={post.imageUrl}
                 alt="post"
-                className="rounded-xl mt-2 max-w-full h-auto opacity-0 transition-opacity duration-700 fade-in-image"
+                className="self-center rounded-xl mt-2 max-w-full max-h-[500px] opacity-0 transition-opacity duration-700 fade-in-image"
                 onLoad={e => e.currentTarget.classList.add('fade-in-image')}
               />
             )}

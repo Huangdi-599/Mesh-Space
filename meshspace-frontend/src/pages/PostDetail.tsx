@@ -25,7 +25,7 @@ const PostDetail = () => {
         <span className="text-xl">←</span> Back
       </button>
       <div className="w-full max-w-xl">
-        <PostCard post={post} />
+        <PostCard post={post} detailPage={true} />
       </div>
     </div>
   );
