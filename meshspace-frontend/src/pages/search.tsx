@@ -34,7 +34,7 @@ const SearchPage = () => {
     if (!query) return;
     setLoading(true);
     setError('');
-    API.get(`/search?q=${encodeURIComponent(query)}`)
+    API.get(`/posts/search?q=${encodeURIComponent(query)}`)
       .then(res => setResults(res.data))
       .catch(() => setError('Failed to fetch search results'))
       .finally(() => setLoading(false));

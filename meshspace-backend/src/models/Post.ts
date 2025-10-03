@@ -13,7 +13,7 @@ export interface IPost extends Document {
 const PostSchema = new Schema<IPost>(
   {
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    content: { type: String, required: true },
+    content: { type: String, required: false },
     imageUrl: { type: String },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     repost: { type: Schema.Types.ObjectId, ref: 'Post', default: null },

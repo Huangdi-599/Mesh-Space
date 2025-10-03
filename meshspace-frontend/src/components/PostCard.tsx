@@ -138,7 +138,7 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
   // Helper to find the parent username for a reply
   const findParentUsername = (parentId: string, allComments: Comment[]): string | null => {
     for (const c of allComments) {
-      if (c._id === parentId) return c.author.username;
+      if (c._id === parentId) return c.author?.username;
       if (c.replies) {
         const found = findParentUsername(parentId, c.replies);
         if (found) return found;
@@ -160,11 +160,11 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
           >
             <div className="flex items-center gap-2">
               <Avatar className="size-9">
-                {c.author.avatar && <AvatarImage src={c.author.avatar} alt={c.author.username} />}
-                <AvatarFallback>{c.author.username[0]}</AvatarFallback>
+                {c.author?.avatar && <AvatarImage src={c.author?.avatar} alt={c.author?.username} />}
+                <AvatarFallback>{c.author?.username[0]}</AvatarFallback>
               </Avatar>
-              <Link to={`/profile/${c.author._id}`} className="font-medium hover:underline text-primary">
-                {c.author.username}
+              <Link to={`/profile/${c.author?._id}`} className="font-medium hover:underline text-primary">
+                {c.author?.username}
               </Link>
               <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleString()}</span>
             </div>
@@ -255,15 +255,15 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
       <CardHeader>
         <div className="flex items-center gap-2">
           <Avatar className="size-9">
-            {post.author.avatar && <AvatarImage src={post.author.avatar} alt={post.author.username} />}
-            <AvatarFallback>{post.author.username[0]}</AvatarFallback>
+            {post.author?.avatar && <AvatarImage src={post.author?.avatar} alt={post.author?.username} />}
+            <AvatarFallback>{post.author?.username[0]}</AvatarFallback>
           </Avatar>
           <CardTitle>
-            <Link to={`/profile/${post.author._id}`} className="hover:underline text-primary">
-              {post.author.username}
+            <Link to={`/profile/${post.author?._id}`} className="hover:underline text-primary">
+              {post.author?.username}
             </Link>
           </CardTitle>
-          <FollowButton userId={post.author._id} isFollowing={!!post.isFollowing} />
+          <FollowButton userId={post.author?._id} isFollowing={!!post.isFollowing} />
           {post.repost && (
             <span
               className="ml-2 px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-semibold cursor-pointer"
@@ -289,10 +289,10 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
             {post.content && <div className="border-b border-border/40 my-2" />}
             <div className="flex items-center gap-2 mb-1">
               <Avatar className="size-7">
-                {post.repost.author.avatar && <AvatarImage src={post.repost.author.avatar} alt={post.repost.author.username} />}
-                <AvatarFallback>{post.repost.author.username[0]}</AvatarFallback>
+                {post.repost.author?.avatar && <AvatarImage src={post.repost.author?.avatar} alt={post.repost.author?.username} />}
+                <AvatarFallback>{post.repost.author?.username[0]}</AvatarFallback>
               </Avatar>
-              <span>Reposted from <Link to={`/profile/${post.repost.author._id}`} className="font-bold hover:underline text-primary">{post.repost.author.username}</Link></span>
+              <span>Reposted from <Link to={`/profile/${post.repost.author?._id}`} className="font-bold hover:underline text-primary">{post.repost.author?.username}</Link></span>
             </div>
             {/* Make the original post content clickable to open its detail page */}
             {post.repost && (

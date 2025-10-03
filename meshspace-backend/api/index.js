@@ -1,23 +1,23 @@
-// src/server.ts
-import http from 'http';
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import { connectDB } from './config/db';
-import { setupSocket } from './utils/socket';
-import morgan from 'morgan';
-// Import routes
-import authRoutes from './routes/auth';
-import userRoutes from './routes/user';
-import postRoutes from './routes/post';
-import notificationRoutes from './routes/notification';
-const PORT = process.env.PORT || 5100;
+// Vercel serverless function entry point
+const { createServer } = require('http');
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 
-dotenv.config();
+// Import routes
+const authRoutes = require('../dist/routes/auth');
+const userRoutes = require('../dist/routes/user');
+const postRoutes = require('../dist/routes/post');
+const notificationRoutes = require('../dist/routes/notification');
+
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+// Middleware
+app.use(cors({ 
+  origin: process.env.CLIENT_URL || 'http://localhost:5173', 
+  credentials: true 
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
@@ -106,7 +106,7 @@ app.get('/', (req, res) => {
             <h1>MeshSpace API</h1>
             <div class="status">✅ Server Running</div>
             <p class="info">
-                Your MeshSpace backend API is successfully running!
+                Your MeshSpace backend API is successfully deployed and running on Vercel!
             </p>
             <div class="endpoints">
                 <h3>Available Endpoints:</h3>
@@ -161,6 +161,12 @@ app.get('/', (req, res) => {
   `);
 });
 
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/notifications', notificationRoutes);
+
 // Health check API endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -172,15 +178,4 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/notifications', notificationRoutes);
-
-connectDB(); // ✅ Connect to MongoDB
-const server = http.createServer(app);
-setupSocket(server);
-
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+module.exports = app;
