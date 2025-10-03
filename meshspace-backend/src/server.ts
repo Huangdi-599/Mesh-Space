@@ -21,6 +21,7 @@ app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
+connectDB(); // ✅ Connect to MongoDB
 
 // Health check endpoint with UI
 app.get('/', (req, res) => {
@@ -177,7 +178,6 @@ app.use('/api/user', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-connectDB(); // ✅ Connect to MongoDB
 const server = http.createServer(app);
 setupSocket(server);
 
