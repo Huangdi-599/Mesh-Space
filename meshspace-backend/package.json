@@ -4,17 +4,11 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev src/server.ts",
-    "build": "rimraf dist && tsc",
-    "start": "nodemon dist/server.js",
-    "ts.check": "tsc --project tsconfig.json",
-    "add-build": "git add dist",
+    "build": "tsc",
+    "start": "nodemon src/server.ts",
+    "vercel-build": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "pre-commit": [
-    "ts.check",
-    "build",
-    "add-build"
-  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -32,7 +26,6 @@
     "multer": "^2.0.1",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.4",
-    "pre-commit": "^1.0.10",
     "rimraf": "^6.0.1",
     "socket.io": "^4.8.1"
   },
