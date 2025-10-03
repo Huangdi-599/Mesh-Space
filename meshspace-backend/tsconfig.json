@@ -109,8 +109,9 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true ,                              /* Skip type checking all .d.ts files. */
-    "rootDir": "./src",
-    "outDir": "./dist",
+    // "rootDir": "./src",
+    "baseUrl": ".",
+    "outDir": "dist",
     "typeRoots": ["./src/types", "./node_modules/@types"]
   }
 }
