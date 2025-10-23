@@ -39,6 +39,27 @@ export const updateProfile: RequestHandler = async (req, res) => {
   }
 };
 
+export const searchUsers: RequestHandler = async (req, res) => {
+  try {
+    const q = (req.query.q as string)?.trim();
+    if (!q) {
+      res.status(400).json({ status: 'error', message: 'Query parameter is required' });
+      return;
+    }
+
+    const users = await User.find({
+      username: { $regex: q, $options: 'i' }
+    })
+    .select('_id username avatar')
+    .limit(10)
+    .sort({ username: 1 });
+
+    res.json({ status: 'success', data: users });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });
+  }
+};
+
 export const followUser: RequestHandler = async (req, res) => {
   try {
     const currentUserId = req.user!.userId;

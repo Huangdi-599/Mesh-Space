@@ -50,7 +50,7 @@ export const authLimiter = rateLimit({
 
 export const postLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 posts per windowMs
+  max: 50, // limit each IP to 50 posts per windowMs (increased for development)
   message: {
     status: 'error',
     message: 'Too many posts created, please try again later.'
@@ -120,9 +120,9 @@ export const corsOptions = {
     
     const allowedOrigins = [
       process.env.CLIENT_URL,
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'https://mesh-space.vercel.app'
+    //   'http://localhost:3000',
+    //   'http://localhost:5173',
+    //   'https://mesh-space.vercel.app'
     ].filter(Boolean);
     
     if (allowedOrigins.includes(origin)) {

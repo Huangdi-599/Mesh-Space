@@ -1,33 +1,30 @@
 import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
 import { createPost } from '@/services/post.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Icon } from '@iconify/react';
 import { toast } from 'sonner';
 import ImagePreviewModal from './ImagePreviewModal';
+import RichTextEditor from './RichTextEditor';
 
 interface CreatePostModalProps {
   children: React.ReactNode;
 }
 
 const CreatePostModal = ({ children }: CreatePostModalProps) => {
-  const { register, handleSubmit, reset, watch } = useForm<{ content: string }>();
+  const [content, setContent] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  const content = watch('content');
-
   const postMutation = useMutation({
     mutationFn: (formData: FormData) => createPost(formData),
     onSuccess: () => {
-      reset();
+      setContent('');
       setSelectedImage(null);
       setIsDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['feed'] });
@@ -38,14 +35,16 @@ const CreatePostModal = ({ children }: CreatePostModalProps) => {
     },
   });
 
-  const onSubmit = (values: { content: string }) => {
-    if (!values.content.trim() && !selectedImage) {
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!content.trim() && !selectedImage) {
       toast.error('Please add some content or an image');
       return;
     }
 
     const formData = new FormData();
-    formData.append('content', values.content);
+    formData.append('content', content);
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
@@ -104,19 +103,14 @@ const CreatePostModal = ({ children }: CreatePostModalProps) => {
             </DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-4">
-              <Textarea
-                {...register('content')}
+              <RichTextEditor
+                content={content}
+                onChange={setContent}
                 placeholder="What's on your mind?"
-                className="min-h-[120px] resize-none"
                 maxLength={2000}
               />
-              
-              {/* Character counter */}
-              <div className="flex justify-end text-xs text-muted-foreground">
-                {content?.length || 0}/2000
-              </div>
 
               {/* Image Preview */}
               {selectedImage && (
@@ -184,7 +178,7 @@ const CreatePostModal = ({ children }: CreatePostModalProps) => {
               </Button>
               <Button
                 type="submit"
-                disabled={postMutation.isPending || (!content?.trim() && !selectedImage)}
+                disabled={postMutation.isPending || (!content.trim() && !selectedImage)}
               >
                 {postMutation.isPending ? (
                   <>

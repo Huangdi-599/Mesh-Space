@@ -14,6 +14,9 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Icon } from '@iconify/react';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
+import ReactionPicker from './ReactionPicker';
+import ReactionDisplay from './ReactionDisplay';
+import BookmarkButton from './BookmarkButton';
 
 export interface Post {
   _id: string;
@@ -22,6 +25,11 @@ export interface Post {
   imageUrl?: string;
   createdAt: string;
   likes: string[];
+  reactions?: Array<{
+    user: { _id: string; username: string; avatar?: string };
+    type: 'like' | 'love' | 'laugh' | 'wow' | 'sad' | 'celebrate';
+  }>;
+  reactionCounts?: Record<string, number>;
   repost?: Post;
   repostCount?: number;
   likesCount?: number;
@@ -50,6 +58,9 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
   const [comment, setComment] = useState('');
   const [optimisticLikes, setOptimisticLikes] = useState(post.likes.length);
   const [hasLiked, setHasLiked] = useState(post.likes.includes(user?._id as string));
+  const [currentUserReaction, setCurrentUserReaction] = useState<string | null>(
+    post.reactions?.find(r => r.user._id === user?._id)?.type || null
+  );
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
   const [quote, setQuote] = useState('');
   const [expandedReplies, setExpandedReplies] = useState<{ [key: string]: boolean }>({});
@@ -419,7 +430,15 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
             {post.content && (
               <div onClick = {()=>navigate(`/post/${post._id}`)}
               className="mb-2 p-3 rounded border bg-muted/60 border-primary/30 text-base italic text-foreground">
-                {post.content}
+                <div 
+                  className="prose prose-sm max-w-none dark:prose-invert prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
+                  dangerouslySetInnerHTML={{ 
+                    __html: post.content.replace(
+                      /#[\w\u0590-\u05ff]+/g, 
+                      '<a href="/hashtag/$&" class="text-primary hover:underline" onclick="event.stopPropagation()">$&</a>'
+                    )
+                  }}
+                />
               </div>
             )}
             {/* Divider between quote and original */}
@@ -438,7 +457,15 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
                 className="cursor-pointer select-text hover:bg-accent/40 rounded p-2 transition-colors"
                 title="View original post"
               >
-                <div className="text-xs mt-1 text-muted-foreground">{post.repost.content}</div>
+                <div 
+                  className="text-xs mt-1 text-muted-foreground prose prose-sm max-w-none dark:prose-invert prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
+                  dangerouslySetInnerHTML={{ 
+                    __html: post.repost.content.replace(
+                      /#[\w\u0590-\u05ff]+/g, 
+                      '<a href="/hashtag/$&" class="text-primary hover:underline" onclick="event.stopPropagation()">$&</a>'
+                    )
+                  }}
+                />
                 {post.repost.imageUrl && (
                   <img
                     src={post.repost.imageUrl}
@@ -509,7 +536,15 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
               </div>
             ) : (
               <div onClick={handleContentClick} className="cursor-pointer select-text flex flex-col">
-                <p>{post.content}</p>
+                <div 
+                  className="prose prose-sm max-w-none dark:prose-invert prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
+                  dangerouslySetInnerHTML={{ 
+                    __html: post.content.replace(
+                      /#[\w\u0590-\u05ff]+/g, 
+                      '<a href="/hashtag/$&" class="text-primary hover:underline" onclick="event.stopPropagation()">$&</a>'
+                    )
+                  }}
+                />
                 {post.imageUrl && (
                   <img
                     src={post.imageUrl}
@@ -525,22 +560,48 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
         <p className="text-sm text-muted-foreground mt-2">
           {new Date(post.createdAt).toLocaleString()}
         </p>
-        <div className="mt-4 flex items-center gap-4">
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-4">
+          {/* Reactions System */}
+          <div className="flex items-center gap-2">
+            <ReactionPicker
+              postId={post._id}
+              currentReaction={currentUserReaction || undefined}
+              onReactionChange={setCurrentUserReaction}
+            />
+            {post.reactionCounts && Object.values(post.reactionCounts).some(count => count > 0) && (
+              <ReactionDisplay
+                reactions={post.reactions || []}
+                reactionCounts={post.reactionCounts}
+                currentUserReaction={currentUserReaction || undefined}
+              />
+            )}
+          </div>
+          
+          {/* Bookmark Button */}
+          <BookmarkButton postId={post._id} />
+          
+          {/* Keep the original like button as fallback */}
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => likeMutation.mutate()}
             className={`transition-transform duration-200 ${hasLiked ? 'scale-110 text-pink-500' : ''}`}
           >
-            <Icon icon={hasLiked ? 'mdi:heart' : 'mdi:heart-outline'} className={`mr-1 ${hasLiked ? 'text-pink-500' : ''}`} /> {post.likesCount ?? optimisticLikes}
+            <Icon icon={hasLiked ? 'mdi:heart' : 'mdi:heart-outline'} className={`mr-1 ${hasLiked ? 'text-pink-500' : ''}`} /> 
+            <span className="hidden sm:inline">{post.likesCount ?? optimisticLikes}</span>
           </Button>
           <Dialog open={repostDialogOpen} onOpenChange={setRepostDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="ghost"
+                size="sm"
                 disabled={repostMutation.isPending}
                 className="transition-transform duration-200"
               >
-                <Icon icon="mdi:repeat-variant" className="mr-1" /> Repost {post.repostCount ?? ''}
+                <Icon icon="mdi:repeat-variant" className="mr-1" /> 
+                <span className="hidden sm:inline">Repost</span>
+                <span className="sm:hidden">Repost</span>
+                {post.repostCount && <span className="ml-1">{post.repostCount}</span>}
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -587,7 +648,7 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
             </DialogContent>
           </Dialog>
           <span className="text-muted-foreground text-sm flex items-center gap-1">
-            💬 {post.commentCount ?? (comments ? comments.length : 0)}
+            💬 <span className="hidden sm:inline">{post.commentCount ?? (comments ? comments.length : 0)}</span>
           </span>
         </div>
         <form

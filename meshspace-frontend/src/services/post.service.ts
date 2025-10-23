@@ -140,3 +140,23 @@ export const deleteComment = async (commentId: string) => {
     throw new Error(getErrorMessage(error, 'Failed to delete comment'));
   }
 };
+
+// Add reaction to a post
+export const addReaction = async (postId: string, reactionType: string) => {
+  try {
+    const res = await API.post(`/posts/${postId}/react`, { type: reactionType });
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to add reaction'));
+  }
+};
+
+// Remove reaction from a post
+export const removeReaction = async (postId: string) => {
+  try {
+    const res = await API.delete(`/posts/${postId}/react`);
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to remove reaction'));
+  }
+};

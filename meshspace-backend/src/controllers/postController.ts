@@ -5,6 +5,8 @@ import { createNotification } from './notificationController';
 import User from '../models/User';
 import Comments from '../models/Comments';
 import { Types } from 'mongoose';
+import { TrendingService } from '../services/trendingService';
+import { MentionService } from '../services/mentionService';
 
 export const createPost: RequestHandler = async (req, res) => {
   const { content } = req.body;
@@ -22,6 +24,30 @@ export const createPost: RequestHandler = async (req, res) => {
       content: content,
       imageUrl: imageUrl,
     });
+
+    // Extract and update hashtag statistics
+    if (content) {
+      try {
+        await TrendingService.updateHashtagStats((post as any)._id.toString(), content);
+      } catch (hashtagError) {
+        console.error('Error updating hashtag stats:', hashtagError);
+        // Don't fail the post creation if hashtag update fails
+      }
+
+      // Process mentions
+      try {
+        await MentionService.processMentions(
+          content,
+          (post as any)._id.toString(),
+          null,
+          req.user!.userId
+        );
+      } catch (mentionError) {
+        console.error('Error processing mentions:', mentionError);
+        // Don't fail the post creation if mention processing fails
+      }
+    }
+
     res.status(201).json({ status: 'success', message: 'Post created', data: post });
   } catch (err) {
     console.log(err);
@@ -170,6 +196,20 @@ export const addComment: RequestHandler = async (req, res) => {
       return;
     }
     const comment = await Comments.create({ post: postId, author: userId, text, parentComment: parentComment || null });
+    
+    // Process mentions in comment
+    try {
+      await MentionService.processMentions(
+        text,
+        postId,
+        (comment as any)._id.toString(),
+        userId
+      );
+    } catch (mentionError) {
+      console.error('Error processing mentions in comment:', mentionError);
+      // Don't fail the comment creation if mention processing fails
+    }
+    
     res.status(201).json({ status: 'success', data: comment });
     // Notify post author (unless self)
     if (post.author.toString() !== userId) {
@@ -192,32 +232,6 @@ export const addComment: RequestHandler = async (req, res) => {
           post: postId,
           message: `${user.username} replied to your comment`
         });
-      }
-    }
-    // Mention notifications
-    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-    const mentionedUsernames: string[] = [];
-    let match: RegExpExecArray | null;
-    while ((match = mentionRegex.exec(text)) !== null) {
-      mentionedUsernames.push(match[1]);
-    }
-    if (mentionedUsernames.length > 0) {
-      const mentionedUsers = await User.find({ username: { $in: mentionedUsernames } });
-      for (const mentioned of mentionedUsers) {
-        const mentionedId = (mentioned as any)._id.toString();
-        if (
-          mentionedId !== userId &&
-          mentionedId !== post.author.toString() &&
-          (!parentComment || mentionedId !== (await Comments.findById(parentComment))?.author.toString())
-        ) {
-          await createNotification({
-            recipient: mentionedId,
-            sender: userId,
-            type: 'mention',
-            post: postId,
-            message: `${user.username} mentioned you in a comment`
-          });
-        }
       }
     }
   } catch (err) {
@@ -502,5 +516,93 @@ export const search: RequestHandler = async (req, res) => {
     res.json({ users, posts });
   } catch (err) {
     res.status(500).json({ users: [], posts: [], error: err instanceof Error ? err.message : String(err) });
+  }
+};
+
+// Add reaction to a post
+export const addReaction = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { postId } = req.params;
+    const { type } = req.body;
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ status: 'error', message: 'Authentication required' });
+      return;
+    }
+
+    if (!['like', 'love', 'laugh', 'wow', 'sad', 'celebrate'].includes(type)) {
+      res.status(400).json({ status: 'error', message: 'Invalid reaction type' });
+      return;
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      res.status(404).json({ status: 'error', message: 'Post not found' });
+      return;
+    }
+
+    // Remove existing reaction from this user
+    post.reactions = post.reactions.filter(
+      (reaction: any) => reaction.user.toString() !== userId
+    );
+
+    // Add new reaction
+    post.reactions.push({ user: userId, type });
+    await post.save();
+
+    // Populate user details for the reaction
+    await post.populate('reactions.user', 'username avatar');
+
+    res.json({ 
+      status: 'success', 
+      message: 'Reaction added successfully',
+      reactions: post.reactions,
+      reactionCounts: post.reactionCounts
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Failed to add reaction', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
+  }
+};
+
+// Remove reaction from a post
+export const removeReaction = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { postId } = req.params;
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ status: 'error', message: 'Authentication required' });
+      return;
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      res.status(404).json({ status: 'error', message: 'Post not found' });
+      return;
+    }
+
+    // Remove user's reaction
+    post.reactions = post.reactions.filter(
+      (reaction: any) => reaction.user.toString() !== userId
+    );
+    await post.save();
+
+    res.json({ 
+      status: 'success', 
+      message: 'Reaction removed successfully',
+      reactions: post.reactions,
+      reactionCounts: post.reactionCounts
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Failed to remove reaction', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
   }
 };

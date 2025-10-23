@@ -16,6 +16,11 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import postRoutes from './routes/post';
 import notificationRoutes from './routes/notification';
+import pollRoutes from './routes/poll';
+import achievementRoutes from './routes/achievement';
+import hashtagRoutes from './routes/hashtag';
+import bookmarkRoutes from './routes/bookmark';
+import mentionRoutes from './routes/mention';
 
 const PORT = process.env.PORT || 5100;
 
@@ -242,6 +247,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/polls', pollRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/hashtags', hashtagRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/mentions', mentionRoutes);
 
   const server = http.createServer(app);
 

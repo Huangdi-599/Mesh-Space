@@ -10,6 +10,8 @@ import { useEffect, type JSX } from 'react';
 import ProfileDisplay from './pages/ProfileDisplay';
 import PostDetail from './pages/PostDetail';
 import SearchPage from './pages/search';
+import SavedPosts from './pages/SavedPosts';
+import Mentions from './pages/Mentions';
 import MinimalLayout from './components/layout/MinimalLayout';
 import VerifyEmailPage from './pages/verify-email';
 import { useAuth } from './hooks/useAuth';
@@ -62,6 +64,12 @@ function App() {
         <Route path="/profile/:id" element={<Layout><ProfileDisplay /></Layout>} />
         <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
         <Route path="/search" element={<Layout><SearchPage /></Layout>} />
+        <Route path="/saved" element={
+          <VerifiedRoute><Layout><SavedPosts /></Layout></VerifiedRoute>
+        } />
+        <Route path="/mentions" element={
+          <VerifiedRoute><Layout><Mentions /></Layout></VerifiedRoute>
+        } />
         <Route path="/forgot-password" element={<MinimalLayout><ForgotPassword /></MinimalLayout>} />
         <Route path="/reset-password" element={<MinimalLayout><ResetPassword /></MinimalLayout>} />
         <Route path="*" element={<NotFoundPage />} />

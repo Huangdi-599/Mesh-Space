@@ -19,7 +19,7 @@ export const register: RequestHandler = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     // Use Cloudinary URL if file uploaded, else fallback to body
     const avatar = req.file ? (req.file as any).path : req.body.avatar;
-    const newUser = await User.create({ username, email: normalizedEmail, password: hashedPassword, avatar });
+    const newUser = await User.create({ username, email: normalizedEmail, password: hashedPassword, avatar , isVerified: true});
 
     const emailToken = jwt.sign({ userId: newUser._id }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: '1d' });
     // Try to send verification email, but don't block registration if it fails

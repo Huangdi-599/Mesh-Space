@@ -13,14 +13,12 @@ export const createIndexes = async () => {
     await Post.collection.createIndex({ author: 1, createdAt: -1 });
     await Post.collection.createIndex({ likes: 1 });
     await Post.collection.createIndex({ repost: 1 });
-    await Post.collection.createIndex({ content: 'text' });
     await Post.collection.createIndex({ createdAt: -1 });
 
     // Comments indexes
     await Comments.collection.createIndex({ post: 1, createdAt: 1 });
     await Comments.collection.createIndex({ author: 1 });
     await Comments.collection.createIndex({ parentComment: 1 });
-    await Comments.collection.createIndex({ text: 'text' });
 
     // User indexes
     await User.collection.createIndex({ email: 1 }, { unique: true });

@@ -14,7 +14,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="p-4 max-w-7xl mx-auto w-full opacity-0 transition-opacity duration-700 fade-in-main flex-1">
+      <main className="p-2 sm:p-4 max-w-7xl mx-auto w-full opacity-0 transition-opacity duration-700 fade-in-main flex-1">
         {children}
       </main>
       {showTop && (
@@ -26,23 +26,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <Icon icon="mdi:arrow-up" className="w-6 h-6" />
         </button>
       )}
-      <footer className="w-full border-t bg-white/70 dark:bg-black/60 backdrop-blur-md backdrop-saturate-150 py-4 px-6 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground mt-8 sticky bottom-0 z-20" style={{ WebkitBackdropFilter: 'blur(12px)' }}>
+      <footer className="w-full border-t bg-white/70 dark:bg-black/60 backdrop-blur-md backdrop-saturate-150 py-4 px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground mt-8 sticky bottom-0 z-20" style={{ WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="flex items-center gap-2 mb-2 md:mb-0">
           <span className="text-lg text-primary font-bold">🕸️</span>
-          <span>&copy; {new Date().getFullYear()} MeshSpace. All rights reserved.</span>
+          <span className="text-xs sm:text-sm">&copy; {new Date().getFullYear()} MeshSpace. All rights reserved.</span>
         </div>
-        <div className="flex gap-4 items-center">
-          <a href="/dashboard" className="hover:underline hover:text-primary transition-colors font-medium flex items-center gap-1">
+        <div className="flex gap-2 sm:gap-4 items-center">
+          <a href="/dashboard" className="hover:underline hover:text-primary transition-colors font-medium flex items-center gap-1 text-xs sm:text-sm">
             <Icon icon="mdi:home" className="w-4 h-4" />
-            Home
+            <span className="hidden sm:inline">Home</span>
           </a>
-          <a href="/profile" className="hover:underline hover:text-primary transition-colors font-medium flex items-center gap-1">
+          <a href="/profile" className="hover:underline hover:text-primary transition-colors font-medium flex items-center gap-1 text-xs sm:text-sm">
             <Icon icon="mdi:account" className="w-4 h-4" />
-            Profile
+            <span className="hidden sm:inline">Profile</span>
           </a>
           <button
             aria-label="Toggle dark mode"
-            className="rounded-full p-2 hover:bg-accent/40 transition-colors ml-2"
+            className="rounded-full p-2 hover:bg-accent/40 transition-colors"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           >
             {theme === 'dark' ? <Icon icon="mdi:white-balance-sunny" className="w-4 h-4" /> : <Icon icon="mdi:moon-waning-crescent" className="w-4 h-4" />}
