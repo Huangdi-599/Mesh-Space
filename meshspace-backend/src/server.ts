@@ -178,12 +178,11 @@ app.use('/api/user', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// For Vercel deployment, export the app directly
-if (process.env.NODE_ENV === 'production') {
-  // In production (Vercel), export the app directly
-  module.exports = app;
-} else {
-  // In development, create HTTP server with Socket.IO
+// Always export the app for Vercel compatibility
+module.exports = app;
+
+// Only start HTTP server in development
+if (process.env.NODE_ENV !== 'production') {
   const server = http.createServer(app);
   setupSocket(server);
 
