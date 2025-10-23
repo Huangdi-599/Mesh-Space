@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Icon } from '@iconify/react';
 
 const Login = () => {
   const { setUser } = useAuth();
@@ -34,7 +35,10 @@ const Login = () => {
     <div className="flex w-fit h-fit justify-center">
       <Card className="w-full max-w-md shadow-xl border rounded-2xl p-4">
         <CardHeader>
-          <CardTitle className="text-center text-2xl">Welcome Back 👋</CardTitle>
+          <CardTitle className="text-center text-2xl flex items-center justify-center gap-2">
+            <Icon icon="mdi:hand-wave" className="w-6 h-6" />
+            Welcome Back
+          </CardTitle>
           <p className="text-sm text-muted-foreground text-center">Log in to your MeshSpace account</p>
         </CardHeader>
         <CardContent>

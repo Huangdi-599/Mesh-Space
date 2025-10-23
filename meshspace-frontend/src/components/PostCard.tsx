@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { likePost, addComment, repostPost, getComments } from '@/services/post.service';
+import { likePost, addComment, repostPost, getComments, updatePost, deletePost, updateComment, deleteComment } from '@/services/post.service';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import FollowButton from './FollowButton';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Icon } from '@iconify/react';
 import { useAuth } from '@/hooks/useAuth';
+import { Input } from '@/components/ui/input';
 
 export interface Post {
   _id: string;
@@ -52,6 +53,11 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
   const [quote, setQuote] = useState('');
   const [expandedReplies, setExpandedReplies] = useState<{ [key: string]: boolean }>({});
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [editPostContent, setEditPostContent] = useState(post.content);
+  const [editPostImage, setEditPostImage] = useState<File | null>(null);
+  const [editingComment, setEditingComment] = useState<string | null>(null);
+  const [editCommentText, setEditCommentText] = useState('');
 
   useEffect(() => {
     setHasLiked(post.likes.includes(user?._id as string));
@@ -129,6 +135,63 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
     },
   });
 
+  const updatePostMutation = useMutation({
+    mutationFn: () => {
+      const formData = new FormData();
+      formData.append('content', editPostContent);
+      if (editPostImage) {
+        formData.append('image', editPostImage);
+      }
+      return updatePost(post._id, formData);
+    },
+    onSuccess: () => {
+      setIsEditingPost(false);
+      setEditPostContent(post.content);
+      setEditPostImage(null);
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      toast.success('Post updated successfully!');
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to update post');
+    },
+  });
+
+  const deletePostMutation = useMutation({
+    mutationFn: () => deletePost(post._id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      toast.success('Post deleted successfully!');
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete post');
+    },
+  });
+
+  const updateCommentMutation = useMutation({
+    mutationFn: ({ commentId, text }: { commentId: string; text: string }) =>
+      updateComment(commentId, text),
+    onSuccess: () => {
+      setEditingComment(null);
+      setEditCommentText('');
+      refetchComments();
+      toast.success('Comment updated successfully!');
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to update comment');
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: string) => deleteComment(commentId),
+    onSuccess: () => {
+      refetchComments();
+      toast.success('Comment deleted successfully!');
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete comment');
+    },
+  });
+
 
   // Helper to toggle replies
   const toggleReplies = (id: string) => {
@@ -173,11 +236,64 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
                 Replying to @{findParentUsername(parentId, allTopLevel)}
               </div>
             )}
-            <div className="mt-1">{c.text}</div>
+            {editingComment === c._id ? (
+              <div className="mt-2">
+                <Textarea
+                  value={editCommentText}
+                  onChange={(e) => setEditCommentText(e.target.value)}
+                  placeholder="Edit your comment..."
+                  rows={2}
+                />
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => updateCommentMutation.mutate({ commentId: c._id, text: editCommentText })}
+                    disabled={updateCommentMutation.isPending}
+                  >
+                    {updateCommentMutation.isPending ? 'Updating...' : 'Save'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingComment(null);
+                      setEditCommentText('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-1">{c.text}</div>
+            )}
             <div className="mt-1 flex gap-2">
               <Button size="sm" variant="ghost" onClick={() => setReplyingTo(c._id)}>
                 Reply
               </Button>
+              {user?._id === c.author?._id && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditingComment(c._id);
+                      setEditCommentText(c.text);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => deleteCommentMutation.mutate(c._id)}
+                    disabled={deleteCommentMutation.isPending}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    {deleteCommentMutation.isPending ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </>
+              )}
               {c.replies && c.replies.length > 0 && (
                 <Button
                   size="sm"
@@ -264,6 +380,27 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
             </Link>
           </CardTitle>
           <FollowButton userId={post.author?._id} isFollowing={!!post.isFollowing} />
+          {user?._id === post.author?._id && !post.repost && (
+            <div className="flex gap-1 ml-auto">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditingPost(true)}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <Icon icon="mdi:edit" className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => deletePostMutation.mutate()}
+                disabled={deletePostMutation.isPending}
+                className="text-red-500 hover:text-red-700"
+              >
+                <Icon icon="mdi:delete" className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
           {post.repost && (
             <span
               className="ml-2 px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-semibold cursor-pointer"
@@ -317,17 +454,73 @@ const PostCard = ({ post, showAllCommentsButton = false, detailPage=false}: Post
       </CardHeader>
       <CardContent>
         {!post.repost && (
-          <div onClick={handleContentClick} className="cursor-pointer select-text flex flex-col">
-            <p>{post.content}</p>
-            {post.imageUrl && (
-              <img
-                src={post.imageUrl}
-                alt="post"
-                className="self-center rounded-xl mt-2 max-w-full max-h-[500px] opacity-0 transition-opacity duration-700 fade-in-image"
-                onLoad={e => e.currentTarget.classList.add('fade-in-image')}
-              />
+          <>
+            {isEditingPost ? (
+              <div className="space-y-4">
+                <Textarea
+                  value={editPostContent}
+                  onChange={(e) => setEditPostContent(e.target.value)}
+                  placeholder="What's on your mind?"
+                  rows={4}
+                />
+                <div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setEditPostImage(e.target.files?.[0] || null)}
+                    className="mb-2"
+                  />
+                  {post.imageUrl && (
+                    <div className="relative">
+                      <img
+                        src={post.imageUrl}
+                        alt="current post"
+                        className="rounded-xl max-w-full max-h-[300px]"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={() => setEditPostImage(null)}
+                      >
+                        Remove Image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => updatePostMutation.mutate()}
+                    disabled={updatePostMutation.isPending}
+                  >
+                    {updatePostMutation.isPending ? 'Updating...' : 'Update Post'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditingPost(false);
+                      setEditPostContent(post.content);
+                      setEditPostImage(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div onClick={handleContentClick} className="cursor-pointer select-text flex flex-col">
+                <p>{post.content}</p>
+                {post.imageUrl && (
+                  <img
+                    src={post.imageUrl}
+                    alt="post"
+                    className="self-center rounded-xl mt-2 max-w-full max-h-[500px] opacity-0 transition-opacity duration-700 fade-in-image"
+                    onLoad={e => e.currentTarget.classList.add('fade-in-image')}
+                  />
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
         <p className="text-sm text-muted-foreground mt-2">
           {new Date(post.createdAt).toLocaleString()}

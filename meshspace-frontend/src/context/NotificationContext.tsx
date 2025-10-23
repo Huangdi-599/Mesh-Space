@@ -19,6 +19,7 @@ type NotificationContextType = {
   notifications: Notification[];
   unreadCount: number;
   markAsRead: (id: string) => void;
+  refreshNotifications: () => void;
 };
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -30,7 +31,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const { data, refetch } = useQuery({
     queryKey: ['notifications'],
     queryFn: getNotifications,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes - data is considered fresh for 5 minutes
+    refetchInterval: false, // Disable automatic polling
+    refetchIntervalInBackground: false, // Don't refetch when tab is not active
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnMount: true, // Only refetch when component mounts
   });
   useEffect(() => {
     if (data) {
@@ -77,12 +82,17 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const refreshNotifications = () => {
+    refetch();
+  };
+
   return (
     <NotificationContext.Provider
       value={{
         notifications,
         unreadCount: notifications.filter((n) => !n.isRead).length,
         markAsRead,
+        refreshNotifications,
       }}
     >
       {children}

@@ -15,6 +15,7 @@ import VerifyEmailPage from './pages/verify-email';
 import { useAuth } from './hooks/useAuth';
 import ForgotPassword from './pages/forgot-password';
 import ResetPassword from './pages/reset-password';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Loader = () => (
   <div className="flex flex-col items-center justify-center min-h-[40vh] w-full">
@@ -45,25 +46,27 @@ function App() {
     }
   }, []);
   return (
-    <Routes>
-      <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
-      <Route path="/landing" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
-      <Route path="/login" element={<MinimalLayout><LoginPage /></MinimalLayout>} />
-      <Route path="/register" element={<MinimalLayout><RegisterPage /></MinimalLayout>} />
-      <Route path="/verify-email" element={<MinimalLayout><VerifyEmailPage /></MinimalLayout>} />
-      <Route path="/dashboard" element={
-        <VerifiedRoute><Layout><Dashboard /></Layout></VerifiedRoute>
-      } />
-      <Route path="/profile" element={
-        <VerifiedRoute><Layout><ProfilePage /></Layout></VerifiedRoute>
-      } />
-      <Route path="/profile/:id" element={<Layout><ProfileDisplay /></Layout>} />
-      <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
-      <Route path="/search" element={<Layout><SearchPage /></Layout>} />
-      <Route path="/forgot-password" element={<MinimalLayout><ForgotPassword /></MinimalLayout>} />
-      <Route path="/reset-password" element={<MinimalLayout><ResetPassword /></MinimalLayout>} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
+        <Route path="/landing" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
+        <Route path="/login" element={<MinimalLayout><LoginPage /></MinimalLayout>} />
+        <Route path="/register" element={<MinimalLayout><RegisterPage /></MinimalLayout>} />
+        <Route path="/verify-email" element={<MinimalLayout><VerifyEmailPage /></MinimalLayout>} />
+        <Route path="/dashboard" element={
+          <VerifiedRoute><Layout><Dashboard /></Layout></VerifiedRoute>
+        } />
+        <Route path="/profile" element={
+          <VerifiedRoute><Layout><ProfilePage /></Layout></VerifiedRoute>
+        } />
+        <Route path="/profile/:id" element={<Layout><ProfileDisplay /></Layout>} />
+        <Route path="/post/:postId" element={<Layout><PostDetail /></Layout>} />
+        <Route path="/search" element={<Layout><SearchPage /></Layout>} />
+        <Route path="/forgot-password" element={<MinimalLayout><ForgotPassword /></MinimalLayout>} />
+        <Route path="/reset-password" element={<MinimalLayout><ResetPassword /></MinimalLayout>} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }
 

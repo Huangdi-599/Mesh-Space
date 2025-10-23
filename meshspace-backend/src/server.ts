@@ -4,23 +4,55 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 import { connectDB } from './config/db';
 import morgan from 'morgan';
+// Import middleware
+import { securityHeaders, corsOptions, generalLimiter } from './middleware/security';
+import { requestLogger, errorLogger, performanceMonitor } from './middleware/logging';
+import { logger } from './middleware/logging';
 // Import routes
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import postRoutes from './routes/post';
 import notificationRoutes from './routes/notification';
+
 const PORT = process.env.PORT || 5100;
 
 dotenv.config();
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
-app.use(express.json());
+// Security middleware
+app.use(securityHeaders);
+app.use(cors(corsOptions));
+app.use(compression());
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-app.use(morgan('dev'));
-connectDB(); // ✅ Connect to MongoDB
+
+// Logging middleware
+app.use(requestLogger);
+app.use(performanceMonitor);
+
+// Morgan for HTTP request logging
+app.use(morgan('combined', {
+  stream: {
+    write: (message: string) => {
+      logger.info(message.trim());
+    }
+  }
+}));
+
+// Rate limiting
+app.use(generalLimiter);
+
+// Connect to MongoDB
+connectDB();
+
+// Error handling middleware
+app.use(errorLogger);
 
 // Health check endpoint with UI
 app.get('/', (req, res) => {
@@ -161,15 +193,49 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Health check API endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'MeshSpace API is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0'
-  });
+// Enhanced health check API endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    const uptime = process.uptime();
+    const memoryUsage = process.memoryUsage();
+    
+    const health = {
+      status: 'success',
+      message: 'MeshSpace API is running',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0',
+      services: {
+        database: {
+          status: dbStatus,
+          connection: mongoose.connection.host
+        },
+        server: {
+          uptime: `${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
+          memory: {
+            used: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+            total: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`
+          }
+        }
+      }
+    };
+
+    if (dbStatus !== 'connected') {
+      health.status = 'degraded';
+      health.message = 'Database connection issue detected';
+    }
+
+    res.json(health);
+  } catch (error) {
+    logger.error('Health check failed', { error });
+    res.status(503).json({
+      status: 'error',
+      message: 'Health check failed',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 app.use('/api/auth', authRoutes);

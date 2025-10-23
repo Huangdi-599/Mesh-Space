@@ -252,6 +252,70 @@ export const getComments: RequestHandler = async (req, res) => {
   }
 };
 
+export const deleteComment: RequestHandler = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const userId = req.user!.userId;
+    
+    const comment = await Comments.findById(commentId);
+    if (!comment) {
+      res.status(404).json({ status: 'error', message: 'Comment not found' });
+      return;
+    }
+
+    // Check if user is the author of the comment
+    if (comment.author.toString() !== userId) {
+      res.status(403).json({ status: 'error', message: 'You can only delete your own comments' });
+      return;
+    }
+
+    // Delete all replies to this comment
+    await Comments.deleteMany({ parentComment: commentId });
+    
+    // Delete the comment itself
+    await Comments.findByIdAndDelete(commentId);
+
+    res.json({ status: 'success', message: 'Comment deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });
+  }
+};
+
+export const updateComment: RequestHandler = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const { text } = req.body;
+    const userId = req.user!.userId;
+    
+    const comment = await Comments.findById(commentId);
+    if (!comment) {
+      res.status(404).json({ status: 'error', message: 'Comment not found' });
+      return;
+    }
+
+    // Check if user is the author of the comment
+    if (comment.author.toString() !== userId) {
+      res.status(403).json({ status: 'error', message: 'You can only edit your own comments' });
+      return;
+    }
+
+    if (!text || text.trim() === '') {
+      res.status(400).json({ status: 'error', message: 'Comment text is required' });
+      return;
+    }
+
+    const updatedComment = await Comments.findByIdAndUpdate(
+      commentId,
+      { text: text.trim() },
+      { new: true, runValidators: true }
+    ).populate('author', 'username email avatar');
+
+    res.json({ status: 'success', message: 'Comment updated successfully', data: updatedComment });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });
+  }
+};
+
 export const repostPost: RequestHandler = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -332,6 +396,75 @@ export const getPostById: RequestHandler = async (req, res) => {
     (post as any).likesCount = post.likes ? post.likes.length : 0;
     (post as any).repostCount = await Post.countDocuments({ repost: post._id });
     res.json({ status: 'success', data: post });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });
+  }
+};
+
+export const deletePost: RequestHandler = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user!.userId;
+    
+    const post = await Post.findById(postId);
+    if (!post) {
+      res.status(404).json({ status: 'error', message: 'Post not found' });
+      return;
+    }
+
+    // Check if user is the author of the post
+    if (post.author.toString() !== userId) {
+      res.status(403).json({ status: 'error', message: 'You can only delete your own posts' });
+      return;
+    }
+
+    // Delete all comments associated with this post
+    await Comments.deleteMany({ post: postId });
+    
+    // Delete all reposts of this post
+    await Post.deleteMany({ repost: postId });
+    
+    // Delete the post itself
+    await Post.findByIdAndDelete(postId);
+
+    res.json({ status: 'success', message: 'Post deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });
+  }
+};
+
+export const updatePost: RequestHandler = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { content } = req.body;
+    const userId = req.user!.userId;
+    const file = (req as any).file;
+    const imageUrl = (file && typeof file === 'object' && 'path' in file) ? file.path : undefined;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      res.status(404).json({ status: 'error', message: 'Post not found' });
+      return;
+    }
+
+    // Check if user is the author of the post
+    if (post.author.toString() !== userId) {
+      res.status(403).json({ status: 'error', message: 'You can only edit your own posts' });
+      return;
+    }
+
+    // Update post fields
+    const updateData: any = {};
+    if (content !== undefined) updateData.content = content;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      postId,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('author', 'username avatar');
+
+    res.json({ status: 'success', message: 'Post updated successfully', data: updatedPost });
   } catch (err) {
     res.status(500).json({ status: 'error', message: 'Server error', errors: [err instanceof Error ? err.message : String(err)] });
   }

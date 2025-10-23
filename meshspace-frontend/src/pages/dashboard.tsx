@@ -1,15 +1,12 @@
-import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { createPost, fetchFeed } from '../services/post.service';
-import { useForm } from 'react-hook-form';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { fetchFeed } from '../services/post.service';
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { useInView } from 'react-intersection-observer';
 import PostCard from '@/components/PostCard';
+import CreatePostModal from '@/components/CreatePostModal';
 import type { Post } from '@/components/PostCard';
-import { toast } from 'sonner';
+import { Icon } from '@iconify/react';
 
 // Sleek Custom Loader component
 const Loader = () => (
@@ -26,20 +23,8 @@ const Loader = () => (
 );
 
 const Dashboard = () => {
-  const { register, handleSubmit, reset } = useForm<{ content: string }>();
-  const [image, setImage] = useState<File | null>(null);
   const [feedType, setFeedType] = useState<'following' | 'trending'>('trending');
-  const queryClient = useQueryClient();
   const { ref, inView } = useInView();
-
-  const postMutation = useMutation({
-    mutationFn: (formData: FormData) => createPost(formData),
-    onSuccess: () => {
-      reset();
-      setImage(null);
-      queryClient.invalidateQueries({ queryKey: ['feed'] });
-    },
-  });
 
   const {
     data,
@@ -54,13 +39,6 @@ const Dashboard = () => {
     getNextPageParam: (lastPage: Post[], allPages: Post[][]) =>
       lastPage.length === 10 ? allPages.length + 1 : undefined,
   });
-
-  const onSubmit = (values: { content: string }) => {
-    const formData = new FormData();
-    formData.append('content', values.content);
-    if (image) formData.append('image', image);
-    postMutation.mutate(formData);
-  };
 
   if (inView && hasNextPage) fetchNextPage();
 
@@ -82,41 +60,13 @@ const Dashboard = () => {
           Following
         </button>
       </div>
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="w-full max-w-xs mx-auto block">Create Post</Button>
-        </DialogTrigger>
-        <DialogContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Textarea {...register('content')} placeholder="What's on your mind?" />
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                if (file) {
-                  if (!file.type.startsWith('image/')) {
-                    toast.error('Only image files are allowed!');
-                    e.target.value = '';
-                    setImage(null);
-                    return;
-                  }
-                  if (file.size > 2 * 1024 * 1024) {
-                    toast.error('Image size must be less than 2MB!');
-                    e.target.value = '';
-                    setImage(null);
-                    return;
-                  }
-                }
-                setImage(file);
-              }}
-            />
-            <Button type="submit" disabled={postMutation.isPending}>
-              {postMutation.isPending ? 'Posting...' : 'Post'}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      
+      <CreatePostModal>
+        <Button className="w-full flex items-center max-w-xs mx-auto">
+          <Icon icon="mdi:plus" className="flex-shrink-0 w-4 h-4"/>
+          Create Post
+        </Button>
+      </CreatePostModal>
 
       <div className="grid gap-4">
         {data?.pages.flat().map((post: Post, i: number) => (

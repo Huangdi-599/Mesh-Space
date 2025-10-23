@@ -58,7 +58,10 @@ const Navbar = () => {
           {theme === 'dark' ? <Icon icon="mdi:white-balance-sunny" className="w-5 h-5" /> : <Icon icon="mdi:moon-waning-crescent" className="w-5 h-5" />}
         </button>
         <NotificationDropdown />
-        <Link to="/dashboard" className="text-sm font-medium hover:underline hover:text-primary transition-colors duration-200">Feeds</Link>
+        <Link to="/dashboard" className="text-sm font-medium hover:underline hover:text-primary transition-colors duration-200 flex items-center gap-1">
+          <Icon icon="mdi:view-dashboard" className="w-4 h-4" />
+          Feeds
+        </Link>
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -68,8 +71,14 @@ const Navbar = () => {
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/profile')} className="flex items-center gap-2">
+                <Icon icon="mdi:account" className="w-4 h-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={logout} className="flex items-center gap-2">
+                <Icon icon="mdi:logout" className="w-4 h-4" />
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}

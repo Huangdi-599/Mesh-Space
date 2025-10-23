@@ -32,8 +32,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <span>&copy; {new Date().getFullYear()} MeshSpace. All rights reserved.</span>
         </div>
         <div className="flex gap-4 items-center">
-          <a href="/dashboard" className="hover:underline hover:text-primary transition-colors font-medium">Home</a>
-          <a href="/profile" className="hover:underline hover:text-primary transition-colors font-medium">Profile</a>
+          <a href="/dashboard" className="hover:underline hover:text-primary transition-colors font-medium flex items-center gap-1">
+            <Icon icon="mdi:home" className="w-4 h-4" />
+            Home
+          </a>
+          <a href="/profile" className="hover:underline hover:text-primary transition-colors font-medium flex items-center gap-1">
+            <Icon icon="mdi:account" className="w-4 h-4" />
+            Profile
+          </a>
           <button
             aria-label="Toggle dark mode"
             className="rounded-full p-2 hover:bg-accent/40 transition-colors ml-2"

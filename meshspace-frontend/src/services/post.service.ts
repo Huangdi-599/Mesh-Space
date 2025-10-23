@@ -100,3 +100,43 @@ export const getPostById = async (postId: string) => {
     throw new Error(getErrorMessage(error, 'Failed to fetch post'));
   }
 };
+
+export const updatePost = async (postId: string, formData: FormData) => {
+  try {
+    const res = await API.put(`/posts/${postId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to update post'));
+  }
+};
+
+export const deletePost = async (postId: string) => {
+  try {
+    const res = await API.delete(`/posts/${postId}`);
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to delete post'));
+  }
+};
+
+export const updateComment = async (commentId: string, text: string) => {
+  try {
+    const res = await API.put(`/posts/comments/${commentId}`, { text });
+    return res.data.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to update comment'));
+  }
+};
+
+export const deleteComment = async (commentId: string) => {
+  try {
+    const res = await API.delete(`/posts/comments/${commentId}`);
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to delete comment'));
+  }
+};

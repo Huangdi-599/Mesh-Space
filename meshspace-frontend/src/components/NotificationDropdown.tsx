@@ -19,7 +19,7 @@ type Notification = {
 };
 
 const NotificationDropdown = () => {
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, refreshNotifications } = useNotifications();
   const navigate = useNavigate();
 
   const handleClick = async (notification: Notification) => {
@@ -47,25 +47,38 @@ const NotificationDropdown = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="animate-dropdown-fade-in">
-        {notifications.length === 0 ? (
-          <DropdownMenuItem disabled>No notifications</DropdownMenuItem>
-        ) : (
-          notifications.map((notification) => (
-            <DropdownMenuItem
-              key={notification._id}
-              onClick={() => handleClick(notification)}
-              className={`cursor-pointer transition-colors duration-200 ${!notification.isRead ? 'bg-primary/10' : ''} hover:bg-primary/20`}
-            >
-              <div className="text-sm">
-                <p className="font-medium">{notification.message}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(notification.createdAt))} ago
-                </p>
-              </div>
-            </DropdownMenuItem>
-          ))
-        )}
+      <DropdownMenuContent className="animate-dropdown-fade-in w-80">
+        <div className="flex items-center justify-between p-2 border-b">
+          <span className="text-sm font-medium">Notifications</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={refreshNotifications}
+            className="h-6 w-6 p-0"
+          >
+            <Icon icon="mdi:refresh" className="w-4 h-4" />
+          </Button>
+        </div>
+        <div className="max-h-80 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <DropdownMenuItem disabled>No notifications</DropdownMenuItem>
+          ) : (
+            notifications.map((notification) => (
+              <DropdownMenuItem
+                key={notification._id}
+                onClick={() => handleClick(notification)}
+                className={`cursor-pointer transition-colors duration-200 ${!notification.isRead ? 'bg-primary/10' : ''} hover:bg-primary/20`}
+              >
+                <div className="text-sm">
+                  <p className="font-medium">{notification.message}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(notification.createdAt))} ago
+                  </p>
+                </div>
+              </DropdownMenuItem>
+            ))
+          )}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

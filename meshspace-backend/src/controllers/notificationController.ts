@@ -3,10 +3,22 @@ import Notification from '../models/Notification';
 
 export const getNotifications: RequestHandler = async (req, res) => {
   try {
+    const limit = parseInt(req.query.limit as string) || 20; // Limit to 20 notifications
+    const skip = parseInt(req.query.skip as string) || 0;
+    
     const notifications = await Notification.find({ recipient: req.user?.userId })
-      .populate('sender', 'username')
-      .populate('post', '_id')
-      .sort({ createdAt: -1 });
+      .populate('sender', 'username avatar')
+      .populate('post', '_id content')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .lean(); // Use lean() for better performance
+
+    // Add cache headers for better performance
+    res.set({
+      'Cache-Control': 'private, max-age=10', // Cache for 10 seconds
+      'ETag': `"notifications-${req.user?.userId}-${Date.now()}"`
+    });
 
     res.status(200).json({ status: 'success', data: notifications });
   } catch (error) {
