@@ -178,9 +178,16 @@ app.use('/api/user', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-const server = http.createServer(app);
-setupSocket(server);
+// For Vercel deployment, export the app directly
+if (process.env.NODE_ENV === 'production') {
+  // In production (Vercel), export the app directly
+  module.exports = app;
+} else {
+  // In development, create HTTP server with Socket.IO
+  const server = http.createServer(app);
+  setupSocket(server);
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
