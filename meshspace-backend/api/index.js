@@ -4,6 +4,9 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 
+// Import database connection
+const { connectDB } = require('../dist/config/db');
+
 // Import compiled routes
 const authRoutes = require('../dist/routes/auth').default;
 const userRoutes = require('../dist/routes/user').default;
@@ -11,6 +14,12 @@ const postRoutes = require('../dist/routes/post').default;
 const notificationRoutes = require('../dist/routes/notification').default;
 
 const app = express();
+
+// Connect to MongoDB
+connectDB();
+
+// Note: Socket.IO is not supported on Vercel serverless functions
+// Real-time features will need to be implemented using polling or external services
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));

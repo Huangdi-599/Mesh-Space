@@ -178,15 +178,9 @@ app.use('/api/user', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Always export the app for Vercel compatibility
-module.exports = app;
-
-// Only start HTTP server in development
-if (process.env.NODE_ENV !== 'production') {
   const server = http.createServer(app);
   setupSocket(server);
 
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
-}
