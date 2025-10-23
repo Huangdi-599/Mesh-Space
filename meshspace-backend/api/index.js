@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const morgan = require('morgan');
+const dotenv = require('dotenv');
 
 // Import database connection
 const { connectDB } = require('../dist/config/db');
@@ -17,6 +18,14 @@ const authRoutes = require('../dist/routes/auth').default;
 const userRoutes = require('../dist/routes/user').default;
 const postRoutes = require('../dist/routes/post').default;
 const notificationRoutes = require('../dist/routes/notification').default;
+const pollRoutes = require('../dist/routes/poll').default;
+const achievementRoutes = require('../dist/routes/achievement').default;
+const hashtagRoutes = require('../dist/routes/hashtag').default;
+const bookmarkRoutes = require('../dist/routes/bookmark').default;
+const mentionRoutes = require('../dist/routes/mention').default;
+
+// Configure environment variables
+dotenv.config();
 
 const app = express();
 
@@ -244,5 +253,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/polls', pollRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/hashtags', hashtagRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/mentions', mentionRoutes);
 
 module.exports = app;
