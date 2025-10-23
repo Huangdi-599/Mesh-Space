@@ -57,11 +57,11 @@ const Login = () => {
             <div className="relative">
               <Input name="password" type={showPassword ? 'text' : 'password'} placeholder="Password" />
               <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
-                {showPassword ? '🙈' : '👁️'}
+                <Icon icon={showPassword ? 'mdi:eye-off' : 'mdi:eye'} className="w-5 h-5" />
               </button>
             </div>
             <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending ? <span className="flex items-center justify-center"><span className="animate-spin mr-2">🔄</span>Logging in...</span> : 'Login'}
+              {mutation.isPending ? <span className="flex items-center justify-center"><Icon icon="mdi:loading" className="animate-spin mr-2 w-4 h-4" />Logging in...</span> : 'Login'}
             </Button>
           </form>
           <div className="flex justify-between mt-4 text-sm">
