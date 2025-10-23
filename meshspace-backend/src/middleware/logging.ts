@@ -2,10 +2,30 @@ import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 
-// Create logs directory if it doesn't exist
-const logsDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+// Check if we're in a serverless environment
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === 'production';
+
+// Create logs directory if it doesn't exist (only in non-serverless environments)
+let logsDir: string;
+if (!isServerless) {
+  logsDir = path.join(process.cwd(), 'logs');
+  if (!fs.existsSync(logsDir)) {
+    try {
+      fs.mkdirSync(logsDir, { recursive: true });
+    } catch (error) {
+      console.warn('Could not create logs directory:', error);
+    }
+  }
+} else {
+  // In serverless environments, use /tmp for logs or skip file logging
+  logsDir = '/tmp/logs';
+  try {
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+  } catch (error) {
+    console.warn('Could not create logs directory in serverless environment:', error);
+  }
 }
 
 // Log levels
@@ -34,12 +54,29 @@ interface LogEntry {
 // Logger class
 class Logger {
   private logToFile(entry: LogEntry) {
-    const logFile = path.join(logsDir, `${entry.level.toLowerCase()}.log`);
-    const logLine = JSON.stringify(entry) + '\n';
-    
-    fs.appendFile(logFile, logLine, (err) => {
-      if (err) console.error('Failed to write to log file:', err);
-    });
+    // Skip file logging in serverless environments if logs directory is not available
+    if (isServerless && !fs.existsSync(logsDir)) {
+      return;
+    }
+
+    try {
+      const logFile = path.join(logsDir, `${entry.level.toLowerCase()}.log`);
+      const logLine = JSON.stringify(entry) + '\n';
+      
+      fs.appendFile(logFile, logLine, (err) => {
+        if (err) {
+          // In serverless environments, silently fail or use console
+          if (!isServerless) {
+            console.error('Failed to write to log file:', err);
+          }
+        }
+      });
+    } catch (error) {
+      // Silently handle file system errors in serverless environments
+      if (!isServerless) {
+        console.error('Failed to write to log file:', error);
+      }
+    }
   }
 
   private log(level: LogLevel, message: string, meta?: any) {
