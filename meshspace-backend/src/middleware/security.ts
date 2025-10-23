@@ -122,7 +122,7 @@ export const corsOptions = {
       process.env.CLIENT_URL,
       'http://localhost:3000',
       'http://localhost:5173',
-      'https://meshspace.vercel.app'
+      'https://mesh-space.vercel.app'
     ].filter(Boolean);
     
     if (allowedOrigins.includes(origin)) {
