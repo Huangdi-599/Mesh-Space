@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { authenticateToken } from '../middleware/authMiddleware';
-import { generalLimiter } from '../middleware/security';
+// Rate limiters removed for serverless deployment compatibility
 import {
   createPoll,
   votePoll,
@@ -48,7 +48,7 @@ const validateVote = [
 ];
 
 // Apply rate limiting to all poll routes
-router.use(generalLimiter);
+// Rate limiting removed for serverless deployment compatibility
 
 // Create poll
 router.post('/', authenticateToken, validatePollCreation, createPoll);

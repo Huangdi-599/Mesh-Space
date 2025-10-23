@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/authMiddleware';
-import { generalLimiter } from '../middleware/security';
+// Rate limiters removed for serverless deployment compatibility
 import {
   savePost,
   unsavePost,
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // Apply rate limiting to all bookmark routes
-router.use(generalLimiter);
+// Rate limiting removed for serverless deployment compatibility
 
 // Save a post
 router.post('/:postId', authenticateToken, savePost);

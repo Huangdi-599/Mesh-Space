@@ -8,7 +8,7 @@ import compression from 'compression';
 import { connectDB } from './config/db';
 import morgan from 'morgan';
 // Import middleware
-import { securityHeaders, corsOptions, generalLimiter } from './middleware/security';
+import { securityHeaders, corsOptions } from './middleware/security';
 import { requestLogger, errorLogger, performanceMonitor } from './middleware/logging';
 import { logger } from './middleware/logging';
 // Import routes
@@ -50,8 +50,7 @@ app.use(morgan('combined', {
   }
 }));
 
-// Rate limiting
-app.use(generalLimiter);
+// Rate limiting removed for serverless deployment compatibility
 
 // Connect to MongoDB
 connectDB();

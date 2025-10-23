@@ -1,5 +1,5 @@
 import express from 'express';
-import { generalLimiter } from '../middleware/security';
+// Rate limiters removed for serverless deployment compatibility
 import {
   getTrendingHashtags,
   getHashtagDetails,
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // Apply rate limiting to all hashtag routes
-router.use(generalLimiter);
+// Rate limiting removed for serverless deployment compatibility
 
 // Get trending hashtags
 router.get('/trending', getTrendingHashtags);

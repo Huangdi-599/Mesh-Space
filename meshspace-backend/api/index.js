@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 const { connectDB } = require('../dist/config/db');
 
 // Import middleware from dist folder
-const { securityHeaders, corsOptions, generalLimiter } = require('../dist/middleware/security');
+const { securityHeaders, corsOptions } = require('../dist/middleware/security');
 const { requestLogger, errorLogger, performanceMonitor, logger } = require('../dist/middleware/logging');
 
 // Import compiled routes
@@ -58,8 +58,7 @@ app.use(morgan('combined', {
   }
 }));
 
-// Rate limiting
-app.use(generalLimiter);
+// Rate limiting removed for serverless deployment compatibility
 
 // Error handling middleware
 app.use(errorLogger);

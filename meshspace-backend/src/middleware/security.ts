@@ -1,5 +1,4 @@
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import { Request, Response, NextFunction } from 'express';
 
 // Security headers middleware
@@ -25,61 +24,7 @@ export const securityHeaders = helmet({
   }
 });
 
-// Rate limiting for different endpoints
-export const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // limit each IP to 1000 requests per windowMs (accommodates periodic notifications)
-  message: {
-    status: 'error',
-    message: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 auth requests per windowMs
-  message: {
-    status: 'error',
-    message: 'Too many authentication attempts, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-export const postLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // limit each IP to 50 posts per windowMs (increased for development)
-  message: {
-    status: 'error',
-    message: 'Too many posts created, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-export const commentLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit each IP to 20 comments per windowMs
-  message: {
-    status: 'error',
-    message: 'Too many comments posted, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-export const notificationLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60, // limit each IP to 60 notification requests per minute (1 per second)
-  message: {
-    status: 'error',
-    message: 'Too many notification requests, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Rate limiting removed for serverless deployment compatibility
 
 // Input sanitization middleware
 export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {

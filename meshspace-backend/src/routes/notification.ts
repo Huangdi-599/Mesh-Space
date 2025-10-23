@@ -1,12 +1,12 @@
 import express from 'express';
 import { getNotifications, markNotificationAsRead } from '../controllers/notificationController';
 import { authenticateToken } from '../middleware/authMiddleware';
-import { notificationLimiter } from '../middleware/security';
+// Rate limiters removed for serverless deployment compatibility
 
 const router = express.Router();
 
 // Apply notification-specific rate limiting
-router.use(notificationLimiter);
+// Rate limiting removed for serverless deployment compatibility
 
 router.get('/', authenticateToken, getNotifications);
 router.patch('/:id/read', authenticateToken, markNotificationAsRead);
