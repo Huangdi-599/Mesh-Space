@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db';
-import { setupSocket } from './utils/socket';
 import morgan from 'morgan';
 // Import routes
 import authRoutes from './routes/auth';
@@ -179,7 +178,6 @@ app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 
   const server = http.createServer(app);
-  setupSocket(server);
 
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

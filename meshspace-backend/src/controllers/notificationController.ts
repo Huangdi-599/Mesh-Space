@@ -1,6 +1,5 @@
 import { Request, Response, RequestHandler } from 'express';
 import Notification from '../models/Notification';
-import { emitNotification } from '../utils/socket';
 
 export const getNotifications: RequestHandler = async (req, res) => {
   try {
@@ -43,7 +42,8 @@ export const createNotification = async ({ recipient, sender, type, post, messag
 }) => {
   try {
     const notification = await Notification.create({ recipient, sender, type, post, message });
-    emitNotification(recipient, notification);
+    // Note: Real-time notifications removed for Vercel compatibility
+    // Notifications will be fetched via polling in the frontend
     return notification;
   } catch (error) {
     console.error('Failed to create notification:', error);
